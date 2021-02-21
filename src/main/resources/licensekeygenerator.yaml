@@ -1,0 +1,14 @@
+database:
+  credentials:
+    username:    'root'
+    password:    'xxx'
+  endpoint:      'jdbc:mysql://msc-cloud.cf82hfnjqnpr.ap-south-1.rds.amazonaws.com:3306/msc-cloud'
+  poolSize:      '1'
+  maxRetries:    '1'
+  retryInterval: '6000'
+microserviceConnection:
+  credentials:
+    username: 'abc'
+    password: 'abc'
+keyFileInfo:
+  location: './src/test/resources/certs/pkcs8_key.pem'
