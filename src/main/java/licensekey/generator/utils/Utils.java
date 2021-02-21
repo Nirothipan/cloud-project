@@ -1,5 +1,8 @@
 package licensekey.generator.utils;
 
+import licensekey.generator.Application;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.BeanAccess;
 
@@ -16,6 +19,7 @@ import java.util.regex.Pattern;
  */
 public class Utils {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
     private static final Pattern varPattern = Pattern.compile("\\$\\{([^}]*)}");
 
     private Utils() {
@@ -65,6 +69,7 @@ public class Utils {
             String sysPropValue = getSystemVariableValue(sysPropKey);
             if (sysPropValue == null || sysPropValue.length() == 0) {
                 String msg = "System property " + sysPropKey + " is not specified";
+                LOG.error(msg);
                 throw new RuntimeException(msg);
             }
             sysPropValue = sysPropValue.replace("\\", "\\\\");

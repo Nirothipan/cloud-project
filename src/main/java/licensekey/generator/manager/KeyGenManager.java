@@ -33,6 +33,13 @@ public class KeyGenManager {
     private final Configuration config;
     private final UpdateDB updateDB;
 
+    public KeyGenManager(Configuration config) {
+
+        this.config = config;
+        this.updateDB = null;
+
+    }
+
     public KeyGenManager(UpdateDB updateDB, Configuration config) {
 
         this.config = config;
@@ -69,7 +76,7 @@ public class KeyGenManager {
     public JsonObject generateKey(UserData userData) throws DBException, Exception {
         // Avoid creating duplicate keys
         String username = userData.getUsername();
-        String jwt = updateDB.retrieveJWTKeyIfExists(username);
+        String jwt = null;
 
         if (jwt == null) {
             Timestamp timestamp = Timestamp.valueOf(userData.getExpiryDate());
@@ -95,7 +102,7 @@ public class KeyGenManager {
             licensekeyGeneratorEntity.setJwtToken(jwt);
             licensekeyGeneratorEntity.setUsername(username);
             // Persist to the database
-            persistToDB(licensekeyGeneratorEntity);
+            // persistToDB(licensekeyGeneratorEntity);
 
         }
         return createOutput(jwt, 0, null);
@@ -122,7 +129,7 @@ public class KeyGenManager {
                     continue;
                 }
                 throw new RuntimeException("Exception occurred when creating EntityManagerFactory for the named " +
-                                                   "persistence unit: ", e);
+                        "persistence unit: ", e);
             }
         } while (numAttempts <= config.getDatabaseConfig().getMaxRetries());
     }
@@ -135,10 +142,10 @@ public class KeyGenManager {
      */
     private Algorithm getAlgorithm() throws Exception {
 
-
-        RSAPrivateKey privateKey = (RSAPrivateKey) PrivateKeyReader.getPrivateKey(
+       
+            RSAPrivateKey privateKey = (RSAPrivateKey) PrivateKeyReader.getPrivateKey(
                 config.getKeyFileInfo().getLocation());
-        return Algorithm.RSA256(null, privateKey);
-
+            return Algorithm.RSA384(null, privateKey);
+        
     }
 }

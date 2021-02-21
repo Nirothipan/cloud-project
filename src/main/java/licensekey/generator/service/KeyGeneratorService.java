@@ -1,51 +1,67 @@
-package licensekey.generator;
+package licensekey.generator.service;
 
-
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.JsonObject;
 import com.mysql.jdbc.exceptions.jdbc4.CommunicationsException;
+import licensekey.generator.Application;
 import licensekey.generator.dao.UpdateDB;
 import licensekey.generator.manager.KeyGenManager;
 import licensekey.generator.model.UserData;
 import licensekey.generator.model.config.Configuration;
-import licensekey.generator.utils.Constants;
-import licensekey.generator.utils.Utils;
 import org.hibernate.exception.JDBCConnectionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import licensekey.generator.exception.DBException;
+import licensekey.generator.exception.PrivateKeyGenerationException;
+import licensekey.generator.utils.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
-public class KeyGeneratorHandler implements RequestHandler<UserData, Object> {
+/**
+ * Licence key generator class.
+ *
+ * @since 1.0.0
+ */
+@Path("/keygenerator")
+public class KeyGeneratorService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
     private KeyGenManager keyGenManager;
     private Configuration config;
 
+    public KeyGeneratorService(Configuration config) {
 
-    @Override
-    public Object handleRequest(UserData userData, Context context) {
-        LambdaLogger logger = context.getLogger();
-        String okResult = "200 OK";
-        // log execution details
-        logger.log("initializing hanlder ");
+        this.config = config;
+    }
 
-         config = Utils.loadConfig(Constants.Configurations.CONFIGURATION_YAML, Configuration.class);
+    /**
+     * Generate license key.
+     *
+     * @param userData Input data from the Json which includes username, creator username,
+     *                 list of products and the expiry date.
+     * @return JsonObject as the response which includes an errorCode, an error message and the JWT
+     */
+    @POST
+    @Path("/key")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public Response generateCustomKey(UserData userData) throws DBException, Exception {
+
+        LOG.info("Generating the custom license key for the user: " + userData.getUsername());
         if (keyGenManager == null) {
             initializeKeyGenManager();
         }
-        JsonObject response = new JsonObject();
-        try {
-            response = keyGenManager.generateKey(userData);
-        } catch (Exception e) {
-            logger.log("Exception :: " + e);
-            e.printStackTrace();
-        }
-       // logger.log("Response : " + response.toString());
-        return response.toString();
+
+        JsonObject response = keyGenManager.generateKey(userData);
+        return Response.ok().entity(response).build();
     }
 
     /**
